@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import axios from "axios";
 
 export default function App() {
   const [filename, setFilename] = useState("");
@@ -35,15 +36,21 @@ export default function App() {
   async function handleUpload(file) {
     if (!file || file.type !== "application/pdf") return;
     setUploading(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    setFilename(file.name);
-    setUploaded(true);
-    setMessages([
-      {
-        role: "ai",
-        text: `✅ Loaded "${file.name}" successfully.\n\nI've indexed the full contents. Ask me anything — diagnoses, medications, test results, what medical terms mean. I'll explain everything in plain English.`,
-      },
-    ]);
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      await axios.post("http://localhost:8000/upload", form);
+      setFilename(file.name);
+      setUploaded(true);
+      setMessages([
+        {
+          role: "ai",
+          text: `✅ Loaded "${file.name}" successfully.\n\nI've indexed the full contents. Ask me anything — diagnoses, medications, test results, what medical terms mean. I'll explain everything in plain English.`,
+        },
+      ]);
+    } catch {
+      alert("Upload failed. Make sure your server is running.");
+    }
     setUploading(false);
   }
 
@@ -54,25 +61,15 @@ export default function App() {
     setQuestion("");
     setLoading(true);
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: `You are MediQuery AI, a helpful medical document assistant. The user uploaded "${filename}". Answer clearly in plain English. Always recommend consulting a doctor for important decisions.`,
-          messages: [{ role: "user", content: q }],
-        }),
+      const res = await axios.post("http://localhost:8000/ask", {
+        question: q,
+        filename,
       });
-      const data = await res.json();
-      const answer =
-        data.content?.map((b) => b.text || "").join("") ||
-        "Sorry, I couldn't process that.";
-      setMessages((prev) => [...prev, { role: "ai", text: answer }]);
+      setMessages((prev) => [...prev, { role: "ai", text: res.data.answer }]);
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "ai", text: "Something went wrong. Please try again." },
+        { role: "ai", text: "Something went wrong. Try again." },
       ]);
     }
     setLoading(false);
