@@ -9,22 +9,7 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [recentDocs] = useState([
-    { name: "Blood Report.pdf", date: "Today", size: "2.4 MB", tag: "LAB" },
-    {
-      name: "MRI Scan Report.pdf",
-      date: "Yesterday",
-      size: "4.1 MB",
-      tag: "SCAN",
-    },
-    { name: "Prescription.pdf", date: "2 days ago", size: "1.2 MB", tag: "RX" },
-    {
-      name: "Chest X-Ray.pdf",
-      date: "3 days ago",
-      size: "2.8 MB",
-      tag: "XRAY",
-    },
-  ]);
+  const [recentDocs, setRecentDocs] = useState([]);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -42,6 +27,27 @@ export default function App() {
       await axios.post("http://localhost:8000/upload", form);
       setFilename(file.name);
       setUploaded(true);
+      const tag = file.name.toLowerCase().includes("lab")
+        ? "LAB"
+        : file.name.toLowerCase().includes("mri")
+          ? "MRI"
+          : file.name.toLowerCase().includes("xray")
+            ? "XRAY"
+            : file.name.toLowerCase().includes("prescription")
+              ? "RX"
+              : "DOC";
+
+      const newDoc = {
+        name: file.name,
+        date: "Just now",
+        size: (file.size / 1024 / 1024).toFixed(1) + " MB",
+        tag,
+      };
+
+      setRecentDocs((prev) => {
+        const filtered = prev.filter((d) => d.name !== file.name);
+        return [newDoc, ...filtered].slice(0, 5);
+      });
       setMessages([
         {
           role: "ai",
