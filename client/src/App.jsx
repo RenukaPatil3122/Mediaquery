@@ -1,7 +1,53 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
+function Toggle({ checked, onChange }) {
+  return (
+    <div
+      onClick={onChange}
+      style={{
+        width: 40,
+        height: 22,
+        borderRadius: 11,
+        flexShrink: 0,
+        cursor: "pointer",
+        background: checked ? "rgba(56,217,198,0.25)" : "#2E4A60",
+        position: "relative",
+        transition: "background 0.25s",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          width: 16,
+          height: 16,
+          borderRadius: "50%",
+          top: 3,
+          left: checked ? 21 : 3,
+          background: checked ? "#38D9C6" : "#5C7D96",
+          transition: "left 0.25s, background 0.25s",
+        }}
+      />
+    </div>
+  );
+}
+
 export default function App() {
+  const [showSettings, setShowSettings] = useState(false);
+  const [settings, setSettings] = useState({
+    saveHistory: true,
+    showRecentDocs: true,
+    autoClear: false,
+    autoScroll: true,
+    showChips: true,
+    compactMode: false,
+    notifyUpload: true,
+    notifyResponse: false,
+    notifyError: true,
+    fontSize: "medium",
+    serverUrl: "http://localhost:8000",
+    activeTab: "profile",
+  });
   const [filename, setFilename] = useState("");
   const [uploaded, setUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -40,7 +86,7 @@ export default function App() {
           ].slice(0, 20),
         );
       }
-      await axios.post("http://localhost:8000/upload", form);
+      await axios.post(`${settings.serverUrl}/upload`, form);
       setFilename(file.name);
       setUploaded(true);
       const tag = file.name.toLowerCase().includes("lab")
@@ -83,10 +129,11 @@ export default function App() {
     setQuestion("");
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:8000/ask", {
+      const res = await axios.post(`${settings.serverUrl}/ask`, {
         question: q,
         filename,
       });
+
       setMessages((prev) => [...prev, { role: "ai", text: res.data.answer }]);
     } catch {
       setMessages((prev) => [
@@ -158,6 +205,60 @@ export default function App() {
       ],
     },
   ];
+  // Settings style helpers (put above return)
+  const sectionLabel = {
+    fontSize: "9.5px",
+    fontWeight: 700,
+    color: "#5C7D96",
+    textTransform: "uppercase",
+    letterSpacing: "0.14em",
+    marginBottom: 10,
+  };
+  const fieldLabel = { fontSize: "11px", color: "#5C7D96", marginBottom: 4 };
+  const rowLabel = { fontSize: "12.5px", color: "#EEF6FF", fontWeight: 500 };
+  const rowSub = { fontSize: "11px", color: "#5C7D96", marginTop: 2 };
+  const settingRow = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "11px 13px",
+    background: "rgba(15,28,48,0.7)",
+    border: "1px solid rgba(56,217,198,0.08)",
+    borderRadius: 10,
+    marginBottom: 6,
+  };
+  const inputStyle = {
+    background: "#172438",
+    border: "1px solid rgba(56,217,198,0.15)",
+    borderRadius: 8,
+    color: "#EEF6FF",
+    fontSize: 12,
+    padding: "7px 11px",
+    fontFamily: "Plus Jakarta Sans,sans-serif",
+    outline: "none",
+  };
+  const selectStyle = {
+    background: "#172438",
+    border: "1px solid rgba(56,217,198,0.15)",
+    borderRadius: 8,
+    color: "#EEF6FF",
+    fontSize: 12,
+    padding: "6px 10px",
+    fontFamily: "Plus Jakarta Sans,sans-serif",
+    outline: "none",
+    cursor: "pointer",
+  };
+  const dangerBtn = {
+    padding: "6px 14px",
+    borderRadius: 8,
+    fontSize: 11.5,
+    fontWeight: 600,
+    cursor: "pointer",
+    fontFamily: "Plus Jakarta Sans,sans-serif",
+    border: "1px solid rgba(248,113,113,0.25)",
+    background: "rgba(248,113,113,0.07)",
+    color: "#F87171",
+  };
 
   return (
     <>
@@ -581,7 +682,7 @@ export default function App() {
               <div className="nav-item" onClick={() => setShowTemplates(true)}>
                 <span className="nav-ico">📝</span>Templates
               </div>
-              <div className="nav-item">
+              <div className="nav-item" onClick={() => setShowSettings(true)}>
                 <span className="nav-ico">⚙️</span>Settings
               </div>
             </div>
@@ -1119,6 +1220,497 @@ export default function App() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {showSettings && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={() => setShowSettings(false)}
+          />
+          <div
+            style={{
+              position: "relative",
+              marginLeft: "auto",
+              width: "420px",
+              height: "100vh",
+              background: "#0F1C30",
+              borderLeft: "1px solid rgba(56,217,198,0.15)",
+              display: "flex",
+              flexDirection: "column",
+              zIndex: 1,
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: "20px 20px 16px",
+                borderBottom: "1px solid rgba(56,217,198,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexShrink: 0,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    color: "#EEF6FF",
+                  }}
+                >
+                  ⚙️ Settings
+                </div>
+                <div
+                  style={{ fontSize: "11px", color: "#5C7D96", marginTop: 3 }}
+                >
+                  Customize your MediQuery experience
+                </div>
+              </div>
+              <div
+                onClick={() => setShowSettings(false)}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  color: "#5C7D96",
+                  padding: "4px 8px",
+                  borderRadius: 8,
+                  background: "rgba(56,217,198,0.06)",
+                }}
+              >
+                ✕
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div
+              style={{
+                display: "flex",
+                gap: 2,
+                padding: "10px 12px 0",
+                borderBottom: "1px solid rgba(56,217,198,0.1)",
+                flexShrink: 0,
+                overflowX: "auto",
+              }}
+            >
+              {[
+                "profile",
+                "appearance",
+                "notifications",
+                "privacy",
+                "about",
+              ].map((tab) => (
+                <div
+                  key={tab}
+                  onClick={() => setSettings((s) => ({ ...s, activeTab: tab }))}
+                  style={{
+                    padding: "7px 14px",
+                    borderRadius: "8px 8px 0 0",
+                    fontSize: "11.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                    color: settings.activeTab === tab ? "#38D9C6" : "#5C7D96",
+                    background:
+                      settings.activeTab === tab ? "#132035" : "transparent",
+                    borderBottom:
+                      settings.activeTab === tab
+                        ? "2px solid #38D9C6"
+                        : "2px solid transparent",
+                    transition: "all 0.18s",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {tab}
+                </div>
+              ))}
+            </div>
+
+            {/* Body */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+              {/* ── PROFILE ── */}
+              {settings.activeTab === "profile" && (
+                <>
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={sectionLabel}>Your profile</div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        marginBottom: 6,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: 14,
+                          flexShrink: 0,
+                          background: "linear-gradient(135deg,#0D8F83,#38D9C6)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 24,
+                          boxShadow: "0 4px 18px rgba(56,217,198,0.3)",
+                        }}
+                      >
+                        🤖
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: "#EEF6FF",
+                          }}
+                        >
+                          AI Assistant
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 10.5,
+                            color: "#38D9C6",
+                            marginTop: 3,
+                          }}
+                        >
+                          ● Free Plan
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={sectionLabel}>Account details</div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                      }}
+                    >
+                      <div>
+                        <div style={fieldLabel}>Display name</div>
+                        <input style={inputStyle} defaultValue="AI Assistant" />
+                      </div>
+                      <div>
+                        <div style={fieldLabel}>Email</div>
+                        <input
+                          style={inputStyle}
+                          defaultValue="user@example.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={sectionLabel}>Danger zone</div>
+                    <div style={settingRow}>
+                      <div>
+                        <div style={rowLabel}>Clear all data</div>
+                        <div style={rowSub}>
+                          Deletes all chat history and documents
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setChatSessions([]);
+                          setRecentDocs([]);
+                          setShowSettings(false);
+                        }}
+                        style={dangerBtn}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ── APPEARANCE ── */}
+              {settings.activeTab === "appearance" && (
+                <>
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={sectionLabel}>Display</div>
+                    <div style={settingRow}>
+                      <div>
+                        <div style={rowLabel}>Font size</div>
+                        <div style={rowSub}>Chat message text size</div>
+                      </div>
+                      <select
+                        style={selectStyle}
+                        value={settings.fontSize}
+                        onChange={(e) =>
+                          setSettings((s) => ({
+                            ...s,
+                            fontSize: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="small">Small</option>
+                        <option value="medium">Medium</option>
+                        <option value="large">Large</option>
+                      </select>
+                    </div>
+                    <div style={settingRow}>
+                      <div>
+                        <div style={rowLabel}>Compact mode</div>
+                        <div style={rowSub}>
+                          Reduce spacing between messages
+                        </div>
+                      </div>
+                      <Toggle
+                        checked={settings.compactMode}
+                        onChange={() =>
+                          setSettings((s) => ({
+                            ...s,
+                            compactMode: !s.compactMode,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={sectionLabel}>Chat behavior</div>
+                    <div style={settingRow}>
+                      <div>
+                        <div style={rowLabel}>Auto-scroll to latest</div>
+                        <div style={rowSub}>Scroll down on new messages</div>
+                      </div>
+                      <Toggle
+                        checked={settings.autoScroll}
+                        onChange={() =>
+                          setSettings((s) => ({
+                            ...s,
+                            autoScroll: !s.autoScroll,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div style={settingRow}>
+                      <div>
+                        <div style={rowLabel}>Show quick chips</div>
+                        <div style={rowSub}>Suggestion buttons below input</div>
+                      </div>
+                      <Toggle
+                        checked={settings.showChips}
+                        onChange={() =>
+                          setSettings((s) => ({
+                            ...s,
+                            showChips: !s.showChips,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ── NOTIFICATIONS ── */}
+              {settings.activeTab === "notifications" && (
+                <div>
+                  <div style={sectionLabel}>Alerts</div>
+                  {[
+                    {
+                      key: "notifyUpload",
+                      label: "Upload complete",
+                      sub: "Notify when PDF is indexed",
+                    },
+                    {
+                      key: "notifyResponse",
+                      label: "AI response ready",
+                      sub: "Notify when answer is available",
+                    },
+                    {
+                      key: "notifyError",
+                      label: "Error alerts",
+                      sub: "Notify on upload or server errors",
+                    },
+                  ].map(({ key, label, sub }) => (
+                    <div key={key} style={settingRow}>
+                      <div>
+                        <div style={rowLabel}>{label}</div>
+                        <div style={rowSub}>{sub}</div>
+                      </div>
+                      <Toggle
+                        checked={settings[key]}
+                        onChange={() =>
+                          setSettings((s) => ({ ...s, [key]: !s[key] }))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* ── PRIVACY ── */}
+              {settings.activeTab === "privacy" && (
+                <>
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={sectionLabel}>Data & storage</div>
+                    {[
+                      {
+                        key: "saveHistory",
+                        label: "Save chat history",
+                        sub: "Keep sessions when switching PDFs",
+                      },
+                      {
+                        key: "showRecentDocs",
+                        label: "Recent documents list",
+                        sub: "Show recently uploaded files",
+                      },
+                      {
+                        key: "autoClear",
+                        label: "Auto-clear on close",
+                        sub: "Wipe session data when tab closes",
+                      },
+                    ].map(({ key, label, sub }) => (
+                      <div key={key} style={settingRow}>
+                        <div>
+                          <div style={rowLabel}>{label}</div>
+                          <div style={rowSub}>{sub}</div>
+                        </div>
+                        <Toggle
+                          checked={settings[key]}
+                          onChange={() =>
+                            setSettings((s) => ({ ...s, [key]: !s[key] }))
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <div style={sectionLabel}>Server</div>
+                    <div
+                      style={{
+                        ...settingRow,
+                        flexDirection: "column",
+                        alignItems: "flex-start",
+                        gap: 8,
+                      }}
+                    >
+                      <div>
+                        <div style={rowLabel}>Backend URL</div>
+                        <div style={rowSub}>API endpoint for upload & ask</div>
+                      </div>
+                      <input
+                        style={{ ...inputStyle, width: "100%" }}
+                        value={settings.serverUrl}
+                        onChange={(e) =>
+                          setSettings((s) => ({
+                            ...s,
+                            serverUrl: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ── ABOUT ── */}
+              {settings.activeTab === "about" && (
+                <>
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={sectionLabel}>App info</div>
+                    {[
+                      { label: "Version", value: "v1.0.0", highlight: true },
+                      {
+                        label: "Built with",
+                        value: "React · FastAPI · ChromaDB · Groq",
+                      },
+                      { label: "AI model", value: "Llama 3 via Groq" },
+                    ].map(({ label, value, highlight }) => (
+                      <div key={label} style={settingRow}>
+                        <div style={rowLabel}>{label}</div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: highlight ? "#38D9C6" : "#5EEAD4",
+                            fontWeight: highlight ? 700 : 500,
+                          }}
+                        >
+                          {value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    style={{
+                      background: "rgba(245,158,11,0.06)",
+                      border: "1px solid rgba(245,158,11,0.18)",
+                      borderRadius: 10,
+                      padding: "13px 14px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        color: "#FCD34D",
+                        marginBottom: 5,
+                      }}
+                    >
+                      ⚠️ Educational use only
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: "#B45309",
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      MediQuery AI is not a substitute for professional medical
+                      advice. Always consult a qualified doctor before making
+                      any health decisions.
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Save bar */}
+            <div
+              style={{
+                padding: "12px 16px",
+                borderTop: "1px solid rgba(56,217,198,0.1)",
+                flexShrink: 0,
+                background: "#0F1C30",
+              }}
+            >
+              <button
+                onClick={() => setShowSettings(false)}
+                style={{
+                  width: "100%",
+                  padding: 10,
+                  background: "linear-gradient(135deg,#0D8F83,#38D9C6)",
+                  border: "none",
+                  borderRadius: 10,
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontFamily: "Plus Jakarta Sans,sans-serif",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              >
+                Save changes
+              </button>
             </div>
           </div>
         </div>
