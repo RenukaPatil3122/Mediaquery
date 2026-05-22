@@ -12,6 +12,7 @@ export default function App() {
   const [recentDocs, setRecentDocs] = useState([]);
   const [chatSessions, setChatSessions] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -109,6 +110,53 @@ export default function App() {
     { icon: "⚠️", text: "Any abnormal results?" },
     { icon: "📋", text: "Summarize simply" },
     { icon: "❓", text: "What to follow up on?" },
+  ];
+
+  const templates = [
+    {
+      icon: "🧪",
+      title: "Lab Report Pack",
+      desc: "For blood tests & lab results",
+      questions: [
+        "What are the abnormal values?",
+        "What does CBC mean?",
+        "Are my kidney levels normal?",
+        "What should I do about these results?",
+      ],
+    },
+    {
+      icon: "💊",
+      title: "Prescription Pack",
+      desc: "For medication & prescriptions",
+      questions: [
+        "Medications prescribed?",
+        "What are the side effects?",
+        "How often should I take these?",
+        "Are there any drug interactions?",
+      ],
+    },
+    {
+      icon: "🏥",
+      title: "Discharge Summary Pack",
+      desc: "For hospital discharge papers",
+      questions: [
+        "What is the diagnosis?",
+        "What are the follow-up instructions?",
+        "What symptoms should I watch for?",
+        "When should I return to the hospital?",
+      ],
+    },
+    {
+      icon: "🧠",
+      title: "General Pack",
+      desc: "For any medical document",
+      questions: [
+        "Summarize simply",
+        "What to follow up on?",
+        "Is anything urgent here?",
+        "What should I ask my doctor?",
+      ],
+    },
   ];
 
   return (
@@ -530,7 +578,7 @@ export default function App() {
                   </span>
                 )}
               </div>
-              <div className="nav-item">
+              <div className="nav-item" onClick={() => setShowTemplates(true)}>
                 <span className="nav-ico">📝</span>Templates
               </div>
               <div className="nav-item">
@@ -919,6 +967,159 @@ export default function App() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {showTemplates && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={() => setShowTemplates(false)}
+          />
+          <div
+            style={{
+              position: "relative",
+              marginLeft: "auto",
+              width: "420px",
+              height: "100vh",
+              background: "#0F1C30",
+              borderLeft: "1px solid rgba(56,217,198,0.15)",
+              display: "flex",
+              flexDirection: "column",
+              zIndex: 1,
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: "20px 20px 16px",
+                borderBottom: "1px solid rgba(56,217,198,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    color: "#EEF6FF",
+                  }}
+                >
+                  📝 Templates
+                </div>
+                <div
+                  style={{ fontSize: "11px", color: "#5C7D96", marginTop: 3 }}
+                >
+                  Click any question to ask it instantly
+                </div>
+              </div>
+              <div
+                onClick={() => setShowTemplates(false)}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  color: "#5C7D96",
+                  padding: "4px 8px",
+                  borderRadius: 8,
+                  background: "rgba(56,217,198,0.06)",
+                }}
+              >
+                ✕
+              </div>
+            </div>
+
+            {/* Packs */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+              {templates.map((pack, pi) => (
+                <div key={pi} style={{ marginBottom: 12 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      padding: "10px 12px",
+                      background: "rgba(56,217,198,0.06)",
+                      borderRadius: "10px 10px 0 0",
+                      border: "1px solid rgba(56,217,198,0.12)",
+                      borderBottom: "none",
+                    }}
+                  >
+                    <span style={{ fontSize: "18px" }}>{pack.icon}</span>
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "12.5px",
+                          fontWeight: 700,
+                          color: "#EEF6FF",
+                        }}
+                      >
+                        {pack.title}
+                      </div>
+                      <div style={{ fontSize: "10.5px", color: "#5C7D96" }}>
+                        {pack.desc}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      border: "1px solid rgba(56,217,198,0.12)",
+                      borderRadius: "0 0 10px 10px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {pack.questions.map((q, qi) => (
+                      <div
+                        key={qi}
+                        onClick={() => {
+                          setQuestion(q);
+                          setShowTemplates(false);
+                          inputRef.current?.focus();
+                        }}
+                        style={{
+                          padding: "10px 14px",
+                          fontSize: "12px",
+                          color: "#9BB8D0",
+                          cursor: "pointer",
+                          borderBottom:
+                            qi < pack.questions.length - 1
+                              ? "1px solid rgba(56,217,198,0.06)"
+                              : "none",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          transition: "all 0.15s",
+                          background: "rgba(15,28,48,0.8)",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background =
+                            "rgba(56,217,198,0.08)";
+                          e.currentTarget.style.color = "#38D9C6";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background =
+                            "rgba(15,28,48,0.8)";
+                          e.currentTarget.style.color = "#9BB8D0";
+                        }}
+                      >
+                        <span style={{ fontSize: "10px", opacity: 0.5 }}>
+                          ❓
+                        </span>{" "}
+                        {q}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
