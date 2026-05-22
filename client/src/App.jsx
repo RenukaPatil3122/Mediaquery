@@ -10,6 +10,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [recentDocs, setRecentDocs] = useState([]);
+  const [chatSessions, setChatSessions] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -24,6 +26,19 @@ export default function App() {
     const form = new FormData();
     form.append("file", file);
     try {
+      if (messages.length > 1) {
+        setChatSessions((prev) =>
+          [
+            {
+              id: Date.now(),
+              filename: filename,
+              date: new Date().toLocaleString(),
+              messages: messages,
+            },
+            ...prev,
+          ].slice(0, 20),
+        );
+      }
       await axios.post("http://localhost:8000/upload", form);
       setFilename(file.name);
       setUploaded(true);
@@ -80,6 +95,12 @@ export default function App() {
     }
     setLoading(false);
     inputRef.current?.focus();
+  }
+  function restoreSession(session) {
+    setFilename(session.filename);
+    setUploaded(true);
+    setMessages(session.messages);
+    setShowHistory(false);
   }
 
   const chips = [
@@ -491,8 +512,23 @@ export default function App() {
 
             <div className="sdiv" />
             <div className="nav-list">
-              <div className="nav-item">
+              <div className="nav-item" onClick={() => setShowHistory(true)}>
                 <span className="nav-ico">💬</span>Chat History
+                {chatSessions.length > 0 && (
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      background: "var(--pri)",
+                      color: "#000",
+                      borderRadius: "10px",
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      padding: "1px 7px",
+                    }}
+                  >
+                    {chatSessions.length}
+                  </span>
+                )}
               </div>
               <div className="nav-item">
                 <span className="nav-ico">📝</span>Templates
@@ -683,6 +719,209 @@ export default function App() {
           </div>
         </div>
       </div>
+      {showHistory && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={() => setShowHistory(false)}
+          />
+          <div
+            style={{
+              position: "relative",
+              marginLeft: "auto",
+              width: "420px",
+              height: "100vh",
+              background: "#0F1C30",
+              borderLeft: "1px solid rgba(56,217,198,0.15)",
+              display: "flex",
+              flexDirection: "column",
+              zIndex: 1,
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 20px 16px",
+                borderBottom: "1px solid rgba(56,217,198,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    color: "#EEF6FF",
+                  }}
+                >
+                  💬 Chat History
+                </div>
+                <div
+                  style={{ fontSize: "11px", color: "#5C7D96", marginTop: 3 }}
+                >
+                  {chatSessions.length} saved session
+                  {chatSessions.length !== 1 ? "s" : ""}
+                </div>
+              </div>
+              <div
+                onClick={() => setShowHistory(false)}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  color: "#5C7D96",
+                  padding: "4px 8px",
+                  borderRadius: 8,
+                  background: "rgba(56,217,198,0.06)",
+                }}
+              >
+                ✕
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+              {chatSessions.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    marginTop: "60px",
+                    color: "#5C7D96",
+                  }}
+                >
+                  <div style={{ fontSize: "32px", marginBottom: 12 }}>💬</div>
+                  <div style={{ fontSize: "13px" }}>No history yet</div>
+                  <div style={{ fontSize: "11px", marginTop: 6 }}>
+                    Sessions are saved when you switch PDFs
+                  </div>
+                </div>
+              ) : (
+                chatSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    onClick={() => restoreSession(session)}
+                    style={{
+                      background: "rgba(56,217,198,0.04)",
+                      border: "1px solid rgba(56,217,198,0.10)",
+                      borderRadius: 12,
+                      padding: "14px",
+                      marginBottom: 8,
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(56,217,198,0.09)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background =
+                        "rgba(56,217,198,0.04)")
+                    }
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginBottom: 8,
+                      }}
+                    >
+                      <span>📄</span>
+                      <span
+                        style={{
+                          fontSize: "12.5px",
+                          fontWeight: 600,
+                          color: "#EEF6FF",
+                          flex: 1,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {session.filename}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "10.5px",
+                        color: "#5C7D96",
+                        marginBottom: 10,
+                      }}
+                    >
+                      {session.date} · {session.messages.length} messages
+                    </div>
+                    {session.messages
+                      .filter((m) => m.role === "user")
+                      .slice(0, 2)
+                      .map((m, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            fontSize: "11px",
+                            color: "#9BB8D0",
+                            padding: "5px 8px",
+                            background: "rgba(56,217,198,0.04)",
+                            borderRadius: 6,
+                            marginBottom: 4,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          ❓ {m.text}
+                        </div>
+                      ))}
+                    <div
+                      style={{
+                        marginTop: 8,
+                        fontSize: "11px",
+                        color: "#38D9C6",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Tap to restore →
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {chatSessions.length > 0 && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderTop: "1px solid rgba(56,217,198,0.1)",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    setChatSessions([]);
+                    setShowHistory(false);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    background: "rgba(239,68,68,0.08)",
+                    border: "1px solid rgba(239,68,68,0.2)",
+                    borderRadius: 10,
+                    color: "#F87171",
+                    fontSize: "12.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "Plus Jakarta Sans,sans-serif",
+                  }}
+                >
+                  🗑️ Clear All History
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
