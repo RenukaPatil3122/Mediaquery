@@ -50,6 +50,7 @@ export default function App() {
   });
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [showAllDocs, setShowAllDocs] = useState(false);
   const [filename, setFilename] = useState("");
   const [uploaded, setUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -656,9 +657,9 @@ export default function App() {
             )}
 
             <div className="sdiv" />
-            <div className="sec-label">
-              Recent Documents <span className="sec-action">View all</span>
-            </div>
+            <span className="sec-action" onClick={() => setShowAllDocs(true)}>
+              View all
+            </span>
             <div className="doc-list">
               {recentDocs.map((d, i) => (
                 <div key={i} className="doc-item">
