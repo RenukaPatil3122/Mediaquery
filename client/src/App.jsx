@@ -51,14 +51,32 @@ export default function App() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [showAllDocs, setShowAllDocs] = useState(false);
-  const [filename, setFilename] = useState("");
-  const [uploaded, setUploaded] = useState(false);
+  const [filename, setFilename] = useState(() => {
+    const saved = localStorage.getItem("mq-recent-docs");
+    if (saved) {
+      const docs = JSON.parse(saved);
+      return docs[0]?.name || "";
+    }
+    return "";
+  });
+
+  const [uploaded, setUploaded] = useState(() => {
+    const saved = localStorage.getItem("mq-recent-docs");
+    return saved ? JSON.parse(saved).length > 0 : false;
+  });
   const [uploading, setUploading] = useState(false);
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [recentDocs, setRecentDocs] = useState([]);
+  const [recentDocs, setRecentDocs] = useState(() => {
+    try {
+      const saved = localStorage.getItem("mq-recent-docs");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [chatSessions, setChatSessions] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -66,9 +84,11 @@ export default function App() {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // Save docs whenever list changes
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    console.log("Saving recentDocs:", recentDocs);
+    localStorage.setItem("mq-recent-docs", JSON.stringify(recentDocs));
+  }, [recentDocs]);
 
   async function handleUpload(file) {
     if (!file || file.type !== "application/pdf") return;
