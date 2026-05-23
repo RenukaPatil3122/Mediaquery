@@ -83,6 +83,7 @@ export default function App() {
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [docMenu, setDocMenu] = useState(null); // { index, x, y }
 
   // Save docs whenever list changes
   useEffect(() => {
@@ -693,7 +694,20 @@ export default function App() {
                       {d.date} · {d.size}
                     </div>
                   </div>
-                  <span className="doc-dots">⋯</span>
+                  <span
+                    className="doc-dots"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setDocMenu({
+                        index: i,
+                        x: rect.left - 120,
+                        y: rect.bottom + 4,
+                      });
+                    }}
+                  >
+                    ⋯
+                  </span>
                 </div>
               ))}
             </div>
@@ -2111,6 +2125,75 @@ export default function App() {
             )}
           </div>
         </div>
+      )}
+      {docMenu !== null && (
+        <>
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 200 }}
+            onClick={() => setDocMenu(null)}
+          />
+          <div
+            style={{
+              position: "fixed",
+              top: docMenu.y,
+              left: docMenu.x,
+              zIndex: 201,
+              background: "#132035",
+              border: "1px solid rgba(56,217,198,0.18)",
+              borderRadius: 10,
+              padding: "4px",
+              minWidth: 140,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            }}
+          >
+            {[
+              {
+                icon: "📂",
+                label: "Load doc",
+                action: () => {
+                  const d = recentDocs[docMenu.index];
+                  setFilename(d.name);
+                  setUploaded(true);
+                  setMessages([]);
+                  setDocMenu(null);
+                },
+              },
+              {
+                icon: "🗑️",
+                label: "Remove",
+                action: () => {
+                  setRecentDocs((prev) =>
+                    prev.filter((_, i) => i !== docMenu.index),
+                  );
+                  setDocMenu(null);
+                },
+              },
+            ].map(({ icon, label, action }) => (
+              <div
+                key={label}
+                onClick={action}
+                style={{
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  color: "#9BB8D0",
+                  cursor: "pointer",
+                  borderRadius: 7,
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "rgba(56,217,198,0.08)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
+              >
+                {icon} {label}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </>
   );
