@@ -48,6 +48,8 @@ export default function App() {
     serverUrl: "http://localhost:8000",
     activeTab: "profile",
   });
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const [filename, setFilename] = useState("");
   const [uploaded, setUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -116,6 +118,19 @@ export default function App() {
           text: `✅ Loaded "${file.name}" successfully.\n\nI've indexed the full contents. Ask me anything — diagnoses, medications, test results, what medical terms mean. I'll explain everything in plain English.`,
         },
       ]);
+      setNotifications((prev) =>
+        [
+          {
+            id: Date.now(),
+            icon: "📋",
+            title: "PDF Uploaded",
+            text: file.name,
+            time: "Just now",
+            unread: true,
+          },
+          ...prev,
+        ].slice(0, 20),
+      );
     } catch {
       alert("Upload failed. Make sure your server is running.");
     }
@@ -716,7 +731,12 @@ export default function App() {
               </span>
             </div>
             <div className="tb-right">
-              <div className="tb-bell">🔔</div>
+              <div
+                className="tb-bell"
+                onClick={() => setShowNotifications(true)}
+              >
+                🔔
+              </div>
               <div className="tb-user">
                 <div className="tb-av">🤖</div>
                 <div>
@@ -1712,6 +1732,189 @@ export default function App() {
                 Save changes
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {showNotifications && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={() => setShowNotifications(false)}
+          />
+          <div
+            style={{
+              position: "relative",
+              marginLeft: "auto",
+              width: "420px",
+              height: "100vh",
+              background: "#0F1C30",
+              borderLeft: "1px solid rgba(56,217,198,0.15)",
+              display: "flex",
+              flexDirection: "column",
+              zIndex: 1,
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                padding: "20px 20px 16px",
+                borderBottom: "1px solid rgba(56,217,198,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    color: "#EEF6FF",
+                  }}
+                >
+                  🔔 Notifications
+                </div>
+                <div
+                  style={{ fontSize: "11px", color: "#5C7D96", marginTop: 3 }}
+                >
+                  {notifications.filter((n) => n.unread).length} unread
+                </div>
+              </div>
+              <div
+                onClick={() => setShowNotifications(false)}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  color: "#5C7D96",
+                  padding: "4px 8px",
+                  borderRadius: 8,
+                  background: "rgba(56,217,198,0.06)",
+                }}
+              >
+                ✕
+              </div>
+            </div>
+
+            {/* List */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+              {notifications.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    marginTop: "60px",
+                    color: "#5C7D96",
+                  }}
+                >
+                  <div style={{ fontSize: "32px", marginBottom: 12 }}>🔔</div>
+                  <div style={{ fontSize: "13px" }}>No notifications yet</div>
+                  <div style={{ fontSize: "11px", marginTop: 6 }}>
+                    Upload a PDF to get started
+                  </div>
+                </div>
+              ) : (
+                notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    style={{
+                      background: n.unread
+                        ? "rgba(56,217,198,0.06)"
+                        : "rgba(56,217,198,0.02)",
+                      border: "1px solid rgba(56,217,198,0.10)",
+                      borderRadius: 12,
+                      padding: "12px 14px",
+                      marginBottom: 8,
+                      display: "flex",
+                      gap: 10,
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <span style={{ fontSize: "20px" }}>{n.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div
+                        style={{
+                          fontSize: "12.5px",
+                          fontWeight: 600,
+                          color: "#EEF6FF",
+                        }}
+                      >
+                        {n.title}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          color: "#9BB8D0",
+                          marginTop: 2,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {n.text}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          color: "#5C7D96",
+                          marginTop: 4,
+                        }}
+                      >
+                        {n.time}
+                      </div>
+                    </div>
+                    {n.unread && (
+                      <div
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: "50%",
+                          background: "#38D9C6",
+                          flexShrink: 0,
+                          marginTop: 4,
+                        }}
+                      />
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            {notifications.length > 0 && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderTop: "1px solid rgba(56,217,198,0.1)",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    setNotifications([]);
+                    setShowNotifications(false);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    background: "rgba(239,68,68,0.08)",
+                    border: "1px solid rgba(239,68,68,0.2)",
+                    borderRadius: 10,
+                    color: "#F87171",
+                    fontSize: "12.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "Plus Jakarta Sans,sans-serif",
+                  }}
+                >
+                  🗑️ Clear All
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
