@@ -657,9 +657,12 @@ export default function App() {
             )}
 
             <div className="sdiv" />
-            <span className="sec-action" onClick={() => setShowAllDocs(true)}>
-              View all
-            </span>
+            <div className="sec-label">
+              Recent Documents
+              <span className="sec-action" onClick={() => setShowAllDocs(true)}>
+                View all
+              </span>
+            </div>
             <div className="doc-list">
               {recentDocs.map((d, i) => (
                 <div key={i} className="doc-item">
@@ -1913,6 +1916,176 @@ export default function App() {
                   }}
                 >
                   🗑️ Clear All
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {showAllDocs && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex" }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={() => setShowAllDocs(false)}
+          />
+          <div
+            style={{
+              position: "relative",
+              marginLeft: "auto",
+              width: "420px",
+              height: "100vh",
+              background: "#0F1C30",
+              borderLeft: "1px solid rgba(56,217,198,0.15)",
+              display: "flex",
+              flexDirection: "column",
+              zIndex: 1,
+            }}
+          >
+            <div
+              style={{
+                padding: "20px 20px 16px",
+                borderBottom: "1px solid rgba(56,217,198,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    color: "#EEF6FF",
+                  }}
+                >
+                  📁 All Documents
+                </div>
+                <div
+                  style={{ fontSize: "11px", color: "#5C7D96", marginTop: 3 }}
+                >
+                  {recentDocs.length} document
+                  {recentDocs.length !== 1 ? "s" : ""}
+                </div>
+              </div>
+              <div
+                onClick={() => setShowAllDocs(false)}
+                style={{
+                  cursor: "pointer",
+                  fontSize: "18px",
+                  color: "#5C7D96",
+                  padding: "4px 8px",
+                  borderRadius: 8,
+                  background: "rgba(56,217,198,0.06)",
+                }}
+              >
+                ✕
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
+              {recentDocs.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    marginTop: "60px",
+                    color: "#5C7D96",
+                  }}
+                >
+                  <div style={{ fontSize: "32px", marginBottom: 12 }}>📁</div>
+                  <div style={{ fontSize: "13px" }}>No documents yet</div>
+                </div>
+              ) : (
+                recentDocs.map((d, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: "rgba(56,217,198,0.04)",
+                      border: "1px solid rgba(56,217,198,0.10)",
+                      borderRadius: 12,
+                      padding: "12px 14px",
+                      marginBottom: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 9,
+                        background: "#132035",
+                        border: "1px solid rgba(56,217,198,0.15)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "9px",
+                        fontWeight: 800,
+                        color: "#38D9C6",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {d.tag}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: "12.5px",
+                          fontWeight: 600,
+                          color: "#EEF6FF",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {d.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "10.5px",
+                          color: "#5C7D96",
+                          marginTop: 2,
+                        }}
+                      >
+                        {d.date} · {d.size}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            {recentDocs.length > 0 && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderTop: "1px solid rgba(56,217,198,0.1)",
+                }}
+              >
+                <button
+                  onClick={() => {
+                    setRecentDocs([]);
+                    setShowAllDocs(false);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "10px",
+                    background: "rgba(239,68,68,0.08)",
+                    border: "1px solid rgba(239,68,68,0.2)",
+                    borderRadius: 10,
+                    color: "#F87171",
+                    fontSize: "12.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "Plus Jakarta Sans,sans-serif",
+                  }}
+                >
+                  🗑️ Clear All Documents
                 </button>
               </div>
             )}
