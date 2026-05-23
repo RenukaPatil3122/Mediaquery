@@ -84,6 +84,7 @@ export default function App() {
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const [docMenu, setDocMenu] = useState(null); // { index, x, y }
+  const [isRecording, setIsRecording] = useState(false);
 
   // Save docs whenever list changes
   useEffect(() => {
@@ -180,6 +181,30 @@ export default function App() {
     }
     setLoading(false);
     inputRef.current?.focus();
+  }
+  function handleMic() {
+    if (
+      !("webkitSpeechRecognition" in window || "SpeechRecognition" in window)
+    ) {
+      alert("Speech recognition not supported in this browser. Try Chrome.");
+      return;
+    }
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      setQuestion((prev) => prev + transcript);
+      inputRef.current?.focus();
+    };
+    recognition.onerror = () => setIsRecording(false);
+
+    recognition.start();
   }
   function restoreSession(session) {
     setFilename(session.filename);
@@ -905,16 +930,15 @@ export default function App() {
                 }
                 disabled={loading}
               />
-              <div className="input-right">
-                <span className="hint-text">Shift+Enter for new line</span>
-                <div className="imic">🎤</div>
-                <button
-                  className="isend"
-                  onClick={handleAsk}
-                  disabled={loading || !question.trim()}
-                >
-                  ➤
-                </button>
+              <div
+                className="imic"
+                onClick={handleMic}
+                style={{
+                  background: isRecording ? "rgba(239,68,68,0.15)" : undefined,
+                  borderColor: isRecording ? "rgba(239,68,68,0.4)" : undefined,
+                }}
+              >
+                {isRecording ? "🔴" : "🎤"}
               </div>
             </div>
             <div className="input-footer">
