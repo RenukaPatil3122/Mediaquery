@@ -88,7 +88,6 @@ export default function App() {
 
   // Save docs whenever list changes
   useEffect(() => {
-    console.log("Saving recentDocs:", recentDocs);
     localStorage.setItem("mq-recent-docs", JSON.stringify(recentDocs));
   }, [recentDocs]);
 
@@ -182,28 +181,43 @@ export default function App() {
     setLoading(false);
     inputRef.current?.focus();
   }
+  const recognitionRef = useRef(null);
+
   function handleMic() {
     if (
       !("webkitSpeechRecognition" in window || "SpeechRecognition" in window)
     ) {
-      alert("Speech recognition not supported in this browser. Try Chrome.");
+      alert("Speech recognition not supported. Try Chrome.");
       return;
     }
+
+    // If already recording, stop it
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
     recognition.interimResults = false;
+    recognition.continuous = true; // 👈 this is the key fix
 
     recognition.onstart = () => setIsRecording(true);
-    recognition.onend = () => setIsRecording(false);
+    recognition.onend = () => {
+      // Auto-restart if still supposed to be recording
+      if (isRecording) recognition.start();
+    };
     recognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
-      setQuestion((prev) => prev + transcript);
+      const transcript = e.results[e.results.length - 1][0].transcript;
+      setQuestion((prev) => prev + " " + transcript);
       inputRef.current?.focus();
     };
     recognition.onerror = () => setIsRecording(false);
 
+    recognitionRef.current = recognition;
     recognition.start();
   }
   function restoreSession(session) {
@@ -930,15 +944,29 @@ export default function App() {
                 }
                 disabled={loading}
               />
-              <div
-                className="imic"
-                onClick={handleMic}
-                style={{
-                  background: isRecording ? "rgba(239,68,68,0.15)" : undefined,
-                  borderColor: isRecording ? "rgba(239,68,68,0.4)" : undefined,
-                }}
-              >
-                {isRecording ? "🔴" : "🎤"}
+              <div className="input-right">
+                <span className="hint-text">Shift+Enter for new line</span>
+                <div
+                  className="imic"
+                  onClick={handleMic}
+                  style={{
+                    background: isRecording
+                      ? "rgba(239,68,68,0.15)"
+                      : undefined,
+                    borderColor: isRecording
+                      ? "rgba(239,68,68,0.4)"
+                      : undefined,
+                  }}
+                >
+                  {isRecording ? "🔴" : "🎤"}
+                </div>
+                <button
+                  className="isend"
+                  onClick={handleAsk}
+                  disabled={loading || !question.trim()}
+                >
+                  ➤
+                </button>
               </div>
             </div>
             <div className="input-footer">
