@@ -202,7 +202,7 @@ export default function App() {
       window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.continuous = true; // 👈 this is the key fix
 
     recognition.onstart = () => setIsRecording(true);
@@ -211,8 +211,22 @@ export default function App() {
       if (isRecording) recognition.start();
     };
     recognition.onresult = (e) => {
-      const transcript = e.results[e.results.length - 1][0].transcript;
-      setQuestion((prev) => prev + " " + transcript);
+      let interim = "";
+      let final = "";
+
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          final += e.results[i][0].transcript;
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+
+      // Show interim results live in the input box
+      if (interim) setQuestion((prev) => prev + interim);
+      // Append final result cleanly
+      if (final) setQuestion((prev) => prev + final);
+
       inputRef.current?.focus();
     };
     recognition.onerror = () => setIsRecording(false);
